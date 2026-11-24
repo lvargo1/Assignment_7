@@ -404,7 +404,7 @@ class ComputerPlayer:
             # Print statement saying the computer attacked and hit a boat, along with the position.
             print("The computer attacked", position, "and missed.")
 
-        # Return True if the human player has been defeated.  Otherwise, return False.
+        # Return True if the human player has been defeated.  Otherwise, return false.
         if self.opponent.board.is_defeated():
             return True
         else:
