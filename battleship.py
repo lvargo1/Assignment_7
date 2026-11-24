@@ -1,5 +1,12 @@
+# I consulted the incorporated CoPilot software for help to explain certain parts of the code. I marked where the AI made suggestions that I followed.
+
 # The BattleshipGame class is the top level class.  A game is created for 1 or 2 players, then the game is played
 # until there is a winner.
+
+# Import random to randomly generate the values for the attack positions of the Computer Player
+import random
+
+
 class BattleshipGame:
 
     # Initialize the game based on the number of players.  Create the two player objects (two humans, or one human
@@ -8,9 +15,10 @@ class BattleshipGame:
     def __init__(self, num_of_players):
         # Create the players.
         if num_of_players == 1:
-            self.players = [HumanPlayer("Player 1"), HumanPlayer("The Computer")]
-            # IN YOUR SOLUTION, ERASE THE LINE ABOVE AND UNCOMMENT THE LINE BELOW. THEN ADD CODE FOR THE ComputerPlayer.
-            # self.players = [HumanPlayer("Player 1"), ComputerPlayer("The Computer")]
+
+            # Set the player to play against the computer player
+            self.players = [HumanPlayer("Player 1"), ComputerPlayer("The Computer")]
+
         else:
             self.players = [HumanPlayer("Player 1"), HumanPlayer("Player 2")]
 
@@ -143,6 +151,7 @@ class Board:
 
 # The boat class represents one of the 5 boats.
 class Boat:
+
     # Initialize the boat with a label (e.g., Destroyer) and a size (e.g., 3).  The position gets set later and will
     # be undefined even after the initialization method.
     def __init__(self, label, size):
@@ -165,6 +174,7 @@ class Boat:
 
 # The HumanPlayer class represents a player controlled by user input.
 class HumanPlayer:
+
     # Initialize the player with a name, a blank board, and a fleet of five boats.
     def __init__(self, player_name):
         self.player_name = player_name
@@ -172,6 +182,17 @@ class HumanPlayer:
         self.fleet = [Boat("Aircraft Carrier", 5), Boat("Battleship", 4), Boat("Submarine", 3), Boat("Destroyer", 3), \
                       Boat("Patrol Boat", 2)]
         self.opponent = None
+
+        # AI suggested adding "self." to the count variables below and to all the other places I put these count variables.
+
+        # Set the attack count tracker to zero
+        self.attack_count = 0
+
+        # Set the hit count tracker to zero
+        self.hit_count = 0
+
+        # Set the miss count tracker to zero
+        self.miss_count = 0
 
     # Link the player to his/her opponent.
     def set_opponent(self, opponent):
@@ -219,14 +240,16 @@ class HumanPlayer:
                     # to try a new position.
                     raise Exception
             except ValueError:
-                print("You must a valid position for the boat.  Please try again.")
+                print("You must add a valid position for the boat.  Please try again.")
                 position = None
             except:
                 print("You must choose a position that is (a) on the board and (b) doesn't intersect" + \
                       "with any other boats.")
                 position = None
 
+
     # This function managers a single turn for the player.
+
     def take_turn(self):
         # Display boards.
         print(f"{self.player_name}'s board:")
@@ -254,8 +277,21 @@ class HumanPlayer:
         hit_flag = self.opponent.board.attack(x, y)
         if hit_flag:
             print("You hit a boat!")
+
+            # If the player hits a boat, add 1 to the hit count tracker
+            self.hit_count += 1
         else:
             print("You missed.")
+
+            # If the player misses a boat, add 1 to the miss count tracker
+            self.miss_count += 1
+
+        # Add one to the attack count tracker per every attack for human player(s)
+        self.attack_count += 1
+
+        # Add print statement stating the counts for the number of attacks, hits, and misses
+        print("You have attacked", self.attack_count, "times, with", self.hit_count, "hits and", self.miss_count, "misses.")
+
 
         # Return true if the opponent has been defeated.  Otherwise, false.
         if self.opponent.board.is_defeated():
@@ -263,4 +299,114 @@ class HumanPlayer:
         else:
             return False
 
+class ComputerPlayer:
+
+    # Some of the comments and program within used with this class were copied or edited from the code in the class HumanPlayer.
+
+    # Initialize the computer player with a name, a blank board, and a fleet of five boats.
+    def __init__(self, player_name):
+        self.player_name = player_name
+        self.board = Board()
+        self.fleet = [Boat("Aircraft Carrier", 5), Boat("Battleship", 4), Boat("Submarine", 3), Boat("Destroyer", 3), \
+                      Boat("Patrol Boat", 2)]
+        self.opponent = None
+
+        # List created to store previously tried attack coordinates by computer.
+        # Each attack done by the computer will be checked against the contents of the list.
+        # If the coordinate is in the list, the computer will generate another set of coordinates to attack to not attack the same place twice.
+        # CoPilot's AI reminded me to add self. to the beginning of the lis and every place I typed out the list. It also guided me to add it to this function instead of being outside of a function.
+        self.attempts_list = []
+
+    # Link the computer to its opponent.
+    def set_opponent(self, opponent):
+        self.opponent = opponent
+
+    # Position the fleet, one boat at a time.
+    def position_fleet(self):
+
+        # Position the boats.
+        for boat in self.fleet:
+            self.position_boat(boat)
+
+        # State when the computer has finished placing its boats.
+        print("The computer has positioned its fleet.")
+
+    # Positions a single boat.  Helper method for positionFleet
+    def position_boat(self, boat):
+  
+
+        # Have computer randomly pick orientation by using random.randint() function.
+        # Have computer randomly pick 0 or 1, and have 0 correspond to vertical orientation and 1 to horizontal orientation
+        orientation = None
+        orientation_value = random.randint(0,1)
+        if orientation_value == 0:
+            orientation = "v"
+        else:
+            orientation = "h"
+
+        # Set position to none
+        position = None
+
+        # Set up loop to have the computer randomly generate the values for the position of the boats.
+        while position is None:
+            try:
+                x = random.randint(0,9)
+                y = random.randint(0,9)
+                position = x,y
+
+                # Boat is added.
+                boat.set_orientation(orientation)
+                boat.set_position(x,y)
+
+                # If the boat cannot be added because it overlaps with another boat or does not fit within the board, have it loop again.
+                if not self.board.add_boat(boat):
+
+                    # Raise exception.
+                    raise Exception
+                
+            # Raise overarching exception
+            except:
+                
+                # Set position back to None to make the loop happen again
+                position = None
+
+    # The computer takes a turn.
+    def take_turn(self):
+
+
+        # Set position to None.
+        position = None
+
+        # Have computer choose attack position through a loop.
+        while position is None:
+
+            # Have computer randomly generate x and y coordinates
+            x = random.randint(0,9)
+            y = random.randint(0,9)
+            position = x,y
+
+            # Compare to generated coordinate position to items in attempts_list.
+            # If the coordinated position has already been generated and is in the list, set the position to None and loop back to generate another set of coordinates.
+            if position in self.attempts_list:
+                position = None
+
+            # If the coordinate position is not in the list, add it to the list for future generated coordinates to be compared to.
+            else:
+                self.attempts_list.append(position)
+
+        # Computer attacks.
+        hit_flag = self.opponent.board.attack(x, y)
+
+        if hit_flag:
+            # Print statement saying the computer attacked and hit a boat, along with the position.
+            print("The computer attacked", position, "and hit a boat!")
+        else:
+            # Print statement saying the computer attacked and hit a boat, along with the position.
+            print("The computer attacked", position, "and missed.")
+
+        # Return True if the human player has been defeated.  Otherwise, return False.
+        if self.opponent.board.is_defeated():
+            return True
+        else:
+            return False
 
